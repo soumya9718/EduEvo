@@ -1,0 +1,675 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>EduEvo — Your Smart Study Companion</title>
+<style>
+  :root{
+    --bg:#0b1220;--panel:#081226;--muted:#94a3b8;--text:#e6eef8;
+    --brand:#22c55e;--brand2:#16a34a;--border:#1e293b;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#060913,#071226);color:var(--text);font-family:Inter,system-ui,Roboto,Arial}
+  header{position:sticky;top:0;background:rgba(6,9,16,0.7);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);z-index:30}
+  .wrap{max-width:1100px;margin:0 auto;padding:14px;display:flex;gap:12px;align-items:center}
+  .logo{font-weight:800;font-size:20px}
+  .pill{border:1px solid var(--border);padding:6px 10px;border-radius:999px;color:var(--muted);font-size:13px}
+  .auth-info{margin-left:auto;display:flex;gap:8px;align-items:center;color:var(--muted);font-size:13px}
+  .btn.tiny{padding:6px 10px;font-size:12px}
+  main{max-width:1100px;margin:18px auto;padding:12px}
+  .panel{background:linear-gradient(180deg, rgba(8,12,18,0.65), rgba(6,8,12,0.6));border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 12px 34px rgba(0,0,0,0.6)}
+  .grid{display:grid;gap:12px}
+  .two{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:900px){.two{grid-template-columns:1fr}}
+  h1{margin:0;font-size:28px}
+  .lead{color:var(--muted);margin:6px 0 10px;font-size:16px;min-height:22px}
+  input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#071126;color:var(--text)}
+  .btn{padding:10px 14px;border-radius:10px;border:0;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#06240f;font-weight:700;cursor:pointer}
+  .btn.secondary{background:transparent;border:1px solid var(--border);color:var(--text)}
+  .row{display:flex;gap:10px;align-items:center}
+  .small{font-size:13px;color:var(--muted)}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .tab-btn{padding:8px 12px;border-radius:8px;background:transparent;border:1px solid transparent;color:var(--muted);cursor:pointer}
+  .tab-btn.active{background:linear-gradient(90deg,var(--brand),var(--brand2));color:#06240f;font-weight:700}
+  .nice-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+  .result-card{padding:12px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.02)}
+  .chat-window{height:320px;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
+  .bubble{max-width:80%;padding:10px;border-radius:10px;background:rgba(255,255,255,0.02)}
+  .bubble.user{align-self:flex-end;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#06240f}
+  .bubble.ai{align-self:flex-start;background:#0b2230}
+  .typing-indicator{font-style:italic;color:var(--muted);font-size:13px}
+  /* Typewriter animation */
+  .typewriter { display:inline-block; vertical-align:middle; }
+  .typewriter .text { border-right:2px solid var(--brand); white-space:nowrap; overflow:hidden; display:inline-block; }
+  /* Fade swap for loading messages */
+  .fade-swap { opacity:0; transition:opacity .5s ease; height:22px; display:block; }
+  .fade-swap.show { opacity:1; }
+  .hidden{display:none}
+	#ad{
+		text-align: center;
+	}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="logo">EduEvo</div>
+    <div class="pill">Smart Study Companion</div>
+    <div class="auth-info">
+      <span id="authStatus">Checking session…</span>
+      <button id="logoutBtn" class="btn secondary tiny hidden" onclick="logoutUser()">Logout</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Main app -->
+  <section id="appMain">
+    <div class="panel">
+      <h1 id="greeting">EduEvo</h1>
+      <!-- Typewriter rotating lines -->
+      <p class="lead" id="typewriterArea">
+        <span class="typewriter"><span id="typewriterText" class="text"></span></span>
+      </p>
+
+      <div class="grid two">
+        <div class="card">
+          <label>Search topic</label>
+          <input id="topicInput" placeholder="Type topic e.g., Photosynthesis">
+          <div class="row" style="margin-top:10px;justify-content:space-between">
+            <div class="row">
+              <button class="btn" onclick="startSearch()">Search</button>
+              <button class="btn secondary" onclick="openChatTab()">Open Chat</button>
+            </div>
+            <div class="small muted">History: <span id="histCount">0</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin:0 0 8px">Controls</h3>
+          <label>Preferred subject</label>
+          <select id="prefSubject">
+            <option>All</option>
+            <option>Mathematics</option>
+            <option>Physics</option>
+            <option>Chemistry</option>
+            <option>Biology</option>
+            <option>English</option>
+            <option>History</option>
+            <option>Geography</option>
+            <option>Economics</option>
+            <option>Computer Science</option>
+            <option>Programming</option>
+            <option>Art</option>
+            <option>Music</option>
+            <option>Physical Education</option>
+            <option>Psychology</option>
+            <option>Sociology</option>
+            <option>Political Science</option>
+            <option>Business Studies</option>
+            <option>Accounting</option>
+            <option>Environmental Science</option>
+            <option>Engineering</option>
+            <option>Medicine</option>
+            <option>Law</option>
+            <option>Philosophy</option>
+          </select>
+          <div style="margin-top:10px" class="small muted">Notes: set word limit in Chat tab when generating AI notes.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:12px"></div>
+
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="tabs" role="tablist">
+          <button class="tab-btn active" data-tab="videos" onclick="switchTab(event)">Videos</button>
+          <button class="tab-btn" data-tab="articles" onclick="switchTab(event)">Articles</button>
+          <button class="tab-btn" data-tab="pdfs" onclick="switchTab(event)">PDFs</button>
+          <button class="tab-btn" data-tab="chat" onclick="switchTab(event)">Chat</button>
+        </div>
+        <div class="row">
+          <button class="btn secondary" onclick="clearHistory()">Clear History</button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div id="tab_videos">
+          <!-- Loading message area (fade swap) -->
+          <div id="videosLoading" class="small muted fade-swap"></div>
+          <div id="videosGrid" class="nice-grid"></div>
+          <div id="videosLoadMore" class="load-more hidden">
+            <button class="btn secondary" onclick="loadMore('videos')">Load More Videos</button>
+          </div>
+        </div>
+        <div id="tab_articles" class="hidden">
+          <div id="articlesLoading" class="small muted fade-swap"></div>
+          <div id="articlesGrid" class="nice-grid"></div>
+          <div id="articlesLoadMore" class="load-more hidden">
+            <button class="btn secondary" onclick="loadMore('articles')">Load More Articles</button>
+          </div>
+        </div>
+        <div id="tab_pdfs" class="hidden">
+          <div id="pdfsLoading" class="small muted fade-swap"></div>
+          <div id="pdfsGrid" class="nice-grid"></div>
+          <div id="pdfsLoadMore" class="load-more hidden">
+            <button class="btn secondary" onclick="loadMore('pdfs')">Load More PDFs</button>
+          </div>
+          <div style="margin-top:8px" class="small muted">If no PDFs appear, try broader queries or click the web PDF search link.</div>
+          <div style="margin-top:8px"><a id="pdfSearchLink" class="small muted" href="#" target="_blank">Search PDFs on web</a></div>
+        </div>
+        <div id="tab_chat" class="hidden">
+          <div style="display:flex;gap:12px">
+            <div style="flex:1" class="card">
+              <div id="chatWindow" class="chat-window"></div>
+              <div class="row" style="margin-top:8px">
+                <input id="chatInput" placeholder="Ask EduEvo about the topic..." onkeydown="if(event.key==='Enter') sendChat()" />
+                <button class="btn" onclick="sendChat()">Send</button>
+              </div>
+            </div>
+            <div style="width:320px" class="card">
+              <h3 style="margin-top:0">AI Tools</h3>
+              <div class="small muted">Generate concise notes (choose word count) or ask conceptual questions.</div>
+              <div style="margin-top:10px">
+                <label>Notes word limit</label>
+                <input id="aiWords" type="number" placeholder="80" />
+                <div style="margin-top:8px" class="row">
+                  <button class="btn" onclick="generateNotes()">Generate Notes</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div style="height:12px"></div>
+
+    <div class="panel card">
+      <h3 style="margin:0 0 8px">Recent Searches & Progress</h3>
+      <div id="progressArea" class="nice-grid"></div>
+    </div>
+
+    <div class="footer" style="margin-top:14px;color:var(--muted);font-size:13px;text-align:center">© EduEvo — Created by Team EduEvo</div>
+  </section>
+</main>
+
+<!-- Modal container (PDF preview / notes) -->
+<div id="modalContainer"></div>
+
+<script>
+/* --------- Frontend logic --------- */
+
+/* Server-provided user (Jinja injection fallback) */
+const serverUser = (function(){ try{ return JSON.parse('{{ user|tojson | safe }}' || 'null'); }catch(e){return null;} })();
+const authUser = (function(){ try{ return JSON.parse('{{ auth_user|tojson | safe }}' || 'null'); }catch(e){return null;} })();
+
+/* UI elements */
+const appMain = document.getElementById('appMain');
+const logoutBtn = document.getElementById('logoutBtn');
+const authStatus = document.getElementById('authStatus');
+let currentProfile = serverUser || null;
+
+/* Typing rotation data (typewriter-style) */
+const rotatingLines = [
+  "Generates perfect notes",
+  "Finds the best lectures",
+  "Helps you study smarter",
+  "Understands your class level",
+  "Creates summaries instantly",
+  "Picks top PDFs for you",
+  "Organizes study plans",
+  "Prepares quick revision"
+];
+let rIdx = 0;
+let typingTimer = null;
+
+/* Loading messages (fade swap) */
+const loadingLines = [
+  "Organizing smart notes for you…",
+  "Scanning YouTube for top results…",
+  "Checking class-specific explanations…",
+  "Fetching verified PDFs and articles…",
+  "Preparing subject-wise summaries…",
+  "Optimizing resources for your level…"
+];
+let loadIdx = 0;
+let loadSwapInterval = null;
+
+/* Search result storage for load-more */
+let currentSearchResults = { videos: [], articles: [], pdfs: [], displayedCount: { videos:0, articles:0, pdfs:0 } };
+
+/* Prefill UI from server */
+(function initApp(){
+  updateAuthHeader();
+  loadProfileUI();
+})();
+
+function updateAuthHeader(){
+  if(!authStatus) return;
+  if(authUser){
+    authStatus.textContent = `Signed in as ${authUser.name}`;
+    if(logoutBtn) logoutBtn.classList.remove('hidden');
+  } else {
+    authStatus.textContent = '';
+    if(logoutBtn) logoutBtn.classList.add('hidden');
+  }
+}
+
+/* Load profile into UI */
+function loadProfileUI(){
+  const fallback = authUser ? {name: authUser.name, class:'', interests:''} : null;
+  const p = serverUser || fallback;
+  currentProfile = p;
+  if(p){
+    document.getElementById('greeting').textContent = `Hi ${p.name} — EduEvo`;
+    document.getElementById('typewriterText').textContent = rotatingLines[0];
+    document.getElementById('topicInput').placeholder = `${p.name}, what would you like to study today?`;
+    const first = (p.interests || '').split(',')[0]?.trim();
+    if(first){
+      const sel = document.getElementById('prefSubject');
+      for(let i=0;i<sel.options.length;i++){ if(sel.options[i].text.toLowerCase().includes(first.toLowerCase())){ sel.selectedIndex=i; break; } }
+    }
+  } else {
+    document.getElementById('greeting').textContent = 'EduEvo';
+    document.getElementById('typewriterText').textContent = rotatingLines[0];
+    document.getElementById('topicInput').placeholder = 'What would you like to study today?';
+  }
+  renderHistory();
+  startTypewriterRotation();
+}
+
+/* Typewriter rotation implementation (type -> pause -> delete -> next) */
+function startTypewriterRotation(){
+  const el = document.getElementById('typewriterText');
+  if(!el) return;
+  stopTypewriterRotation();
+  rIdx = 0;
+  (function cycle(){
+    const txt = rotatingLines[rIdx];
+    typeString(el, txt, 40, function(){
+      setTimeout(function(){
+        deleteString(el, 30, function(){
+          rIdx = (rIdx+1) % rotatingLines.length;
+          cycle();
+        });
+      }, 900);
+    });
+  })();
+}
+function stopTypewriterRotation(){ if(typingTimer) { clearTimeout(typingTimer); typingTimer = null; } }
+function typeString(el, text, speed, cb){
+  el.style.width = 'auto';
+  el.textContent = '';
+  let i=0;
+  function step(){
+    if(i<=text.length){ el.textContent = text.slice(0,i); i++; typingTimer=setTimeout(step,speed); }
+    else { typingTimer = setTimeout(cb,0); }
+  }
+  step();
+}
+function deleteString(el, speed, cb){
+  let text = el.textContent || '';
+  let i = text.length;
+  function step(){
+    if(i>=0){ el.textContent = text.slice(0,i); i--; typingTimer=setTimeout(step,speed); }
+    else { typingTimer = setTimeout(cb,0); }
+  }
+  step();
+}
+
+/* Fade-swap loading messages rotate while searching */
+function startLoadingSwap(containerId){
+  stopLoadingSwap(containerId);
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  loadIdx = 0;
+  el.textContent = loadingLines[loadIdx];
+  el.classList.add('show');
+  loadSwapInterval = setInterval(function(){
+    el.classList.remove('show');
+    setTimeout(function(){
+      loadIdx = (loadIdx+1) % loadingLines.length;
+      el.textContent = loadingLines[loadIdx];
+      el.classList.add('show');
+    }, 500);
+  }, 1800);
+}
+function stopLoadingSwap(containerId){
+  const el = document.getElementById(containerId);
+  if(el){ el.classList.remove('show'); el.textContent = ''; }
+  if(loadSwapInterval){ clearInterval(loadSwapInterval); loadSwapInterval = null; }
+}
+
+/* Tabs */
+function switchTab(ev){
+  const tab = ev.currentTarget.dataset.tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  document.getElementById('tab_videos').classList.toggle('hidden', tab!=='videos');
+  document.getElementById('tab_articles').classList.toggle('hidden', tab!=='articles');
+  document.getElementById('tab_pdfs').classList.toggle('hidden', tab!=='pdfs');
+  document.getElementById('tab_chat').classList.toggle('hidden', tab!=='chat');
+}
+function openChatTab(){
+  document.querySelectorAll('.tab-btn').forEach(b=>{ if(b.dataset.tab==='chat') b.classList.add('active'); else b.classList.remove('active'); });
+  document.getElementById('tab_videos').classList.add('hidden');
+  document.getElementById('tab_articles').classList.add('hidden');
+  document.getElementById('tab_pdfs').classList.add('hidden');
+  document.getElementById('tab_chat').classList.remove('hidden');
+}
+
+/* Search flow */
+async function startSearch(){
+  const topic = document.getElementById('topicInput').value.trim();
+  if(!topic) return alert('Enter a topic');
+  // save history locally
+  let hist = JSON.parse(localStorage.getItem('eduevo_history') || '[]');
+  hist.push({topic, when: new Date().toISOString()});
+  localStorage.setItem('eduevo_history', JSON.stringify(hist));
+  renderHistory();
+
+  // show loading placeholders (rotating)
+  startLoadingSwap('videosLoading');
+  startLoadingSwap('articlesLoading');
+  startLoadingSwap('pdfsLoading');
+
+  document.getElementById('videosGrid').innerHTML = '';
+  document.getElementById('articlesGrid').innerHTML = '';
+  document.getElementById('pdfsGrid').innerHTML = '';
+
+  try{
+    const classPref = (currentProfile && currentProfile.class) || '';
+    const subject = document.getElementById('prefSubject').value || 'All';
+    const searchTopic = classPref ? `${topic} class ${classPref} ${subject}` : `${topic} ${subject}`;
+
+    const res = await fetch('/api/search', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({topic: searchTopic})
+    });
+    const j = await res.json();
+
+    stopLoadingSwap('videosLoading');
+    stopLoadingSwap('articlesLoading');
+    stopLoadingSwap('pdfsLoading');
+
+    // store results
+    currentSearchResults.videos = j.videos || [];
+    currentSearchResults.articles = j.articles || [];
+    currentSearchResults.pdfs = (j.articles || []).filter(a=>a.pdf);
+    currentSearchResults.displayedCount = { videos:0, articles:0, pdfs:0 };
+
+    // render first batch
+    renderVideos(currentSearchResults.videos.slice(0,12));
+    currentSearchResults.displayedCount.videos = Math.min(12, currentSearchResults.videos.length);
+
+    renderArticles(currentSearchResults.articles.slice(0,12));
+    currentSearchResults.displayedCount.articles = Math.min(12, currentSearchResults.articles.length);
+
+    renderPDFs(currentSearchResults.pdfs.slice(0,12), j.pdf_search_link || j.web_search_link);
+    currentSearchResults.displayedCount.pdfs = Math.min(12, currentSearchResults.pdfs.length);
+
+    // toggle load more visibility
+    document.getElementById('videosLoadMore').classList.toggle('hidden', currentSearchResults.displayedCount.videos >= currentSearchResults.videos.length);
+    document.getElementById('articlesLoadMore').classList.toggle('hidden', currentSearchResults.displayedCount.articles >= currentSearchResults.articles.length);
+    document.getElementById('pdfsLoadMore').classList.toggle('hidden', currentSearchResults.displayedCount.pdfs >= currentSearchResults.pdfs.length);
+
+    // default to videos tab
+    document.querySelector('.tab-btn[data-tab="videos"]').click();
+  }catch(e){
+    stopLoadingSwap('videosLoading');
+    stopLoadingSwap('articlesLoading');
+    stopLoadingSwap('pdfsLoading');
+    console.error(e); alert('Search failed');
+  }
+}
+
+/* Load more */
+function loadMore(type){
+  const increment = 8;
+  const start = currentSearchResults.displayedCount[type];
+  const end = start + increment;
+
+  if(type==='videos'){
+    renderVideos(currentSearchResults.videos.slice(0,end), true);
+    currentSearchResults.displayedCount.videos = Math.min(end, currentSearchResults.videos.length);
+    document.getElementById('videosLoadMore').classList.toggle('hidden', currentSearchResults.displayedCount.videos >= currentSearchResults.videos.length);
+  } else if(type==='articles'){
+    renderArticles(currentSearchResults.articles.slice(0,end), true);
+    currentSearchResults.displayedCount.articles = Math.min(end, currentSearchResults.articles.length);
+    document.getElementById('articlesLoadMore').classList.toggle('hidden', currentSearchResults.displayedCount.articles >= currentSearchResults.articles.length);
+  } else if(type==='pdfs'){
+    renderPDFs(currentSearchResults.pdfs.slice(0,end), '', true);
+    currentSearchResults.displayedCount.pdfs = Math.min(end, currentSearchResults.pdfs.length);
+    document.getElementById('pdfsLoadMore').classList.toggle('hidden', currentSearchResults.displayedCount.pdfs >= currentSearchResults.pdfs.length);
+  }
+}
+
+/* Renderers */
+function renderVideos(videos, append=false){
+  const grid = document.getElementById('videosGrid');
+  if(!append) grid.innerHTML='';
+  if(!videos || videos.length===0){
+    if(!append) grid.innerHTML = '<div class="card small muted">No videos found.</div>';
+    return;
+  }
+  videos.forEach(v=>{
+    const div = document.createElement('div'); div.className='result-card';
+    div.innerHTML = `<h3 style="margin:0">${escapeHtml(v.title||'Video')}</h3>
+      <div class="small muted">Channel: ${escapeHtml(v.channel || 'Unknown')}</div>
+      <div style="margin-top:8px" class="row">
+        <a class="btn" href="${v.url}" target="_blank" rel="noopener">Watch Video</a>
+      </div>`;
+    grid.appendChild(div);
+  });
+}
+
+function renderArticles(articles, append=false){
+  const grid = document.getElementById('articlesGrid');
+  if(!append) grid.innerHTML='';
+  if(!articles || articles.length===0){
+    if(!append) grid.innerHTML = '<div class="card small muted">No articles found.</div>';
+    return;
+  }
+  articles.forEach(a=>{
+    const div = document.createElement('div'); div.className='result-card';
+    const auths = (a.authors||[]).slice(0,3).join(', ');
+    div.innerHTML = `<h3 style="margin:0">${escapeHtml(a.title||'Article')}</h3>
+      <div class="small muted">${escapeHtml(auths)} • ${a.journal||''} • ${a.year||''}</div>
+      <div style="margin-top:8px" class="row">
+        ${a.pdf ? `<button class="btn" onclick="previewPDF('${encodeURIComponent(a.pdf)}')">Preview PDF</button>` : ''}
+        ${a.pdf ? `<button class="btn secondary" onclick="downloadPDF('${encodeURIComponent(a.pdf)}')">Download</button>` : ''}
+        ${a.url ? `<a class="btn secondary" href="${a.url}" target="_blank">View Article</a>` : ''}
+      </div>`;
+    grid.appendChild(div);
+  });
+}
+
+function renderPDFs(pdfs, pdfSearchLink, append=false){
+  const grid = document.getElementById('pdfsGrid');
+  if(!append) grid.innerHTML='';
+  if(!pdfs || pdfs.length===0){
+    if(!append){
+      grid.innerHTML = `<div class="card small muted">No direct PDFs found. <a href="${pdfSearchLink}" target="_blank" class="small muted">Search PDFs on web</a></div>`;
+      document.getElementById('pdfSearchLink').href = pdfSearchLink;
+    }
+    return;
+  }
+  pdfs.forEach(p=>{
+    const div=document.createElement('div'); div.className='result-card';
+    div.innerHTML = `<h3 style="margin:0">${escapeHtml(p.title||'PDF')}</h3>
+      <div class="small muted">${(p.authors||[]).slice(0,3).join(', ')} • ${p.year||''}</div>
+      <div style="margin-top:8px" class="row">
+        <button class="btn" onclick="previewPDF('${encodeURIComponent(p.pdf)}')">Preview</button>
+        <button class="btn secondary" onclick="downloadPDF('${encodeURIComponent(p.pdf)}')">Download</button>
+      </div>`;
+    grid.appendChild(div);
+  });
+}
+
+/* PDF preview/download */
+function previewPDF(encUrl){
+  const url = decodeURIComponent(encUrl);
+  const modal = document.createElement('div');
+  modal.innerHTML = `<div style="position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,0.7);z-index:120">
+    <div style="width:92%;height:86%;background:var(--panel);border-radius:10px;padding:12px;display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="small muted">PDF Preview</div>
+        <div>
+          <button class="btn secondary" onclick="this.closest('div[role=dialog]').parentElement.remove()">Close</button>
+        </div>
+      </div>
+      <div style="flex:1;margin-top:8px;border-radius:8px;overflow:hidden;display:grid;place-items:center">
+        <div class="small muted">Loading PDF preview...</div>
+      </div>
+    </div></div>`;
+  modal.setAttribute('role','dialog');
+  document.getElementById('modalContainer').appendChild(modal);
+  // load iframe after short delay
+  setTimeout(()=>{
+    const iframe = document.createElement('iframe');
+    iframe.src = url;
+    iframe.style.width='100%'; iframe.style.height='100%'; iframe.style.border='0';
+    modal.querySelector('div > div:last-child').innerHTML = '';
+    modal.querySelector('div > div:last-child').appendChild(iframe);
+  },100);
+}
+
+function downloadPDF(encUrl){
+  const url = decodeURIComponent(encUrl);
+  const dl = '/download?url=' + encodeURIComponent(url);
+  const a = document.createElement('a'); a.href = dl; a.download=''; document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* Chat & AI */
+async function sendChat(){
+  const msg = document.getElementById('chatInput').value.trim();
+  if(!msg) return;
+  pushBubble(msg,'user'); document.getElementById('chatInput').value='';
+
+  const typingId = showTypingIndicator();
+  try{
+    const res = await fetch('/api/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({message: msg})
+    });
+    hideTypingIndicator(typingId);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const j = await res.json();
+    if(j.error) pushBubble(`Error: ${j.error}`, 'ai');
+    else if(j.reply){
+      if(j.reply_html) pushBubble(j.reply_html, 'ai', true);
+      else pushBubble(j.reply, 'ai');
+    } else pushBubble('No response from AI', 'ai');
+  }catch(e){
+    hideTypingIndicator(typingId); console.error(e); pushBubble('Error connecting to AI service', 'ai');
+  }
+}
+
+function showTypingIndicator(){
+  const win = document.getElementById('chatWindow');
+  const b = document.createElement('div');
+  const id = 'typing-' + Date.now();
+  b.id = id; b.className = 'bubble ai';
+  const span = document.createElement('span'); span.className='typing-indicator'; span.textContent='EduEvo is typing';
+  b.appendChild(span); win.appendChild(b); win.scrollTop = win.scrollHeight;
+  // animate dots
+  let dots = 0;
+  const iv = setInterval(()=>{ dots = (dots+1)%4; span.textContent = 'EduEvo is typing' + '.'.repeat(dots); win.scrollTop = win.scrollHeight; }, 500);
+  b._iv = iv;
+  return id;
+}
+function hideTypingIndicator(id){
+  const el = document.getElementById(id);
+  if(el){
+    clearInterval(el._iv);
+    if(el.parentElement) el.parentElement.removeChild(el);
+  }
+}
+
+function pushBubble(text, who, rawHtml=false){
+  const win = document.getElementById('chatWindow');
+  const b = document.createElement('div'); b.className = 'bubble ' + (who==='user'?'user':'ai');
+  if(rawHtml){
+    const div = document.createElement('div'); div.style.whiteSpace='pre-wrap'; div.style.fontFamily='inherit'; div.innerHTML = text; b.appendChild(div);
+  } else {
+    const pre = document.createElement('pre'); pre.style.whiteSpace='pre-wrap'; pre.style.margin='0'; pre.style.fontFamily='inherit'; pre.textContent = text; b.appendChild(pre);
+  }
+  win.appendChild(b); win.scrollTop = win.scrollHeight;
+}
+
+/* Generate concise notes */
+async function generateNotes(){
+  const topic = document.getElementById('topicInput').value.trim();
+  if(!topic) return alert('Search a topic first');
+  const words = Number(document.getElementById('aiWords').value) || 80;
+  const prompt = `Write a concise study-note on "${topic}" in about ${words} words. Include definition, one key idea/formula, and a short example.`;
+  pushBubble(prompt,'user');
+  const typingId = showTypingIndicator();
+  try{
+    const res = await fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({message: prompt}) });
+    hideTypingIndicator(typingId);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const j = await res.json();
+    if(j.error) pushBubble(`Error: ${j.error}`, 'ai');
+    else if(j.reply){
+      if(j.reply_html) pushBubble(j.reply_html,'ai', true); else pushBubble(j.reply,'ai');
+      const notes_html = j.reply_html ? j.reply_html : `<pre style="white-space:pre-wrap;margin-top:10px">${escapeHtml(j.reply||'')}</pre>`;
+      const notes_plain = j.reply || '';
+      const modal = document.createElement('div');
+      modal.innerHTML = `<div style="position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,0.7);z-index:130">
+        <div style="width:90%;max-width:800px;background:var(--panel);padding:12px;border-radius:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">AI Notes</h3><div><button class="btn secondary" onclick="this.closest('div[role=dialog]').parentElement.remove()">Close</button></div></div>
+          <div style="margin-top:10px;white-space:pre-wrap">${notes_html}</div>
+          <div style="margin-top:8px" class="row"><button class="btn" onclick="downloadText('notes_${topic.replace(/\\s+/g,'_')}.txt', \`${escapeBackticks(notes_plain)}\`)">Download Notes</button></div>
+        </div></div>`;
+      modal.setAttribute('role','dialog'); document.getElementById('modalContainer').appendChild(modal);
+    } else pushBubble('No response from AI','ai');
+  }catch(e){ hideTypingIndicator(typingId); console.error('Generate notes error:', e); alert('Failed to generate notes'); }
+}
+
+/* History & progress */
+function renderHistory(){
+  const area = document.getElementById('progressArea'); area.innerHTML='';
+  const hist = JSON.parse(localStorage.getItem('eduevo_history') || '[]').slice().reverse().slice(0,8);
+  document.getElementById('histCount').textContent = hist.length;
+  hist.forEach(h=>{
+    const div = document.createElement('div'); div.className='result-card';
+    div.innerHTML = `<h3 style="margin:0">${escapeHtml(h.topic)}</h3><div class="small muted">${new Date(h.when).toLocaleString()}</div><div style="margin-top:8px" class="row"><button class="btn secondary" onclick="setTopic('${escapeAttr(h.topic)}')">Open</button></div>`;
+    area.appendChild(div);
+  });
+}
+function setTopic(t){ document.getElementById('topicInput').value = t; startSearch(); }
+function clearHistory(){ localStorage.removeItem('eduevo_history'); renderHistory(); alert('History cleared'); }
+
+/* Utilities */
+function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function escapeAttr(s){ return (s||'').replace(/'/g,"\\'").replace(/"/g,'\\"'); }
+function escapeBackticks(s){ return (s||'').replace(/`/g,'\\`'); }
+function downloadText(fn, txt){ const b=new Blob([txt],{type:'text/plain'}); const u=URL.createObjectURL(b); const a=document.createElement('a'); a.href=u; a.download=fn; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(u); }
+
+async function logoutUser(){
+  try{
+    await fetch('/logout', {method:'POST'});
+  }catch(e){
+    console.error('Logout failed', e);
+  }finally{
+    window.location.href = '/auth';
+  }
+}
+</script>
+<div id="ad">
+  <script type="text/javascript">
+	atOptions = {
+		'key' : '8bff60ba2bd4e02194728efbdc1539ed',
+		'format' : 'iframe',
+		'height' : 60,
+		'width' : 468,
+		'params' : {}
+	};
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/8bff60ba2bd4e02194728efbdc1539ed/invoke.js"></script>
+</div>
+</body>
+</html>
+
