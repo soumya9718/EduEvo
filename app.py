@@ -13,8 +13,8 @@ app.secret_key = "eduevo_secret_key_please_change"
 # -------------------------
 # Gemini API
 # ------------------------
-
-GENAI_CLIENT = genai.Client(api_key="AIzaSyBt4x9qu_TC-dqo1jcBLlGmKxe8_uSr-HY")
+api_key = os.getenv("API_KEY")
+GENAI_CLIENT = genai.Client(api_key=api_key)
 YOUTUBE_API_KEY = None
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "eduevo.db")
